@@ -64,29 +64,42 @@ const App: React.FC = () => {
     socket.emit("subscribe");
 
     socket.on("loadingData", (data) => {
-      store.ignoreNextChanges = true;
-      store.tasks = JSON.parse(data);
-      store.ignoreNextChanges = false;
+      runInAction(() => {
+        store.ignoreNextChanges = false;
+        store.tasks = JSON.parse(data);
+        store.ignoreNextChanges = true;
+      });
     });
 
     socket.on("newTodo", (data) => {
-      store.ignoreNextChanges = true;
-      store.tasks.push(JSON.parse(data));
-      store.ignoreNextChanges = false;
+      console.log("newTodo event", data);
+      runInAction(() => {
+        store.ignoreNextChanges = false;
+        store.tasks.push(JSON.parse(data));
+        store.ignoreNextChanges = true;
+      });
     });
 
-    socket.on("editTodo", (data) => {
-      const parsedData = JSON.parse(data);
-      store.ignoreNextChanges = true;
-      const index = store.tasks.findIndex((task) => task.id === parsedData.id);
-      store.tasks[index] = parsedData;
-      store.ignoreNextChanges = false;
+    socket.on("editedTodo", (data) => {
+      console.log("editTodo event", data);
+      runInAction(() => {
+        const parsedData = JSON.parse(data);
+        store.ignoreNextChanges = false;
+        const index = store.tasks.findIndex(
+          (task) => task.id === parsedData.id,
+        );
+        store.tasks[index] = parsedData;
+        store.ignoreNextChanges = true;
+      });
     });
 
-    socket.on("deleteTodo", (data) => {
-      store.ignoreNextChanges = true;
-      store.tasks = store.tasks.filter((task) => task.id !== data);
-      store.ignoreNextChanges = false;
+    socket.on("deletedTodo", (data) => {
+      console.log("deleteTodo event", data);
+      runInAction(() => {
+        store.ignoreNextChanges = false;
+        store.tasks = store.tasks.filter((task) => task.id !== data);
+        store.ignoreNextChanges = true;
+      });
     });
 
     const getParentElements = (
